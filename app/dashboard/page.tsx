@@ -1,0 +1,199 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { Navbar } from "@/components/navbar"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Calculator, Tractor, TrendingUp, Sprout, ArrowRight } from "lucide-react"
+import { getUser, getFarmsByUser, getSoilTestsByUser } from "@/lib/storage"
+
+export default function DashboardPage() {
+  const router = useRouter()
+  const [user, setUser] = useState<any>(null)
+  const [stats, setStats] = useState({
+    totalFarms: 0,
+    recommendations: 0,
+    sustainability: 8.2,
+  })
+
+  useEffect(() => {
+    const currentUser = getUser()
+    if (!currentUser) {
+      router.push("/auth/login")
+      return
+    }
+    setUser(currentUser)
+
+    const farms = getFarmsByUser(currentUser.id)
+    const tests = getSoilTestsByUser(currentUser.id)
+    setStats({
+      totalFarms: farms.length,
+      recommendations: tests.length,
+      sustainability: 8.2,
+    })
+  }, [])
+
+  if (!user) return null
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+      <Navbar />
+      <div className="container mx-auto px-4 py-8">
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Welcome back, {user.name}!</h1>
+          <p className="text-muted-foreground">
+            Manage your farms and optimize fertilizer usage for sustainable agriculture.
+          </p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Total Farms</CardTitle>
+              <Tractor className="w-4 h-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalFarms}</div>
+              <p className="text-xs text-muted-foreground">Registered farms</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Recommendations</CardTitle>
+              <Calculator className="w-4 h-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.recommendations}</div>
+              <p className="text-xs text-muted-foreground">Fertilizer recommendations</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Sustainability</CardTitle>
+              <TrendingUp className="w-4 h-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.sustainability}/10</div>
+              <p className="text-xs text-muted-foreground">Average score</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Feature Cards */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="bg-primary/10 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                <Calculator className="w-6 h-6 text-primary" />
+              </div>
+              <CardTitle>NPK Calculator</CardTitle>
+              <CardDescription>Calculate optimal fertilizer recommendations based on soil analysis</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/calculator">
+                <Button className="w-full">
+                  Start Calculation
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="bg-secondary/10 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                <Tractor className="w-6 h-6 text-secondary" />
+              </div>
+              <CardTitle>Manage Farms</CardTitle>
+              <CardDescription>View and manage your registered farms and their details</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/farms">
+                <Button variant="outline" className="w-full bg-transparent">
+                  View Farms
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="bg-accent/10 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                <TrendingUp className="w-6 h-6 text-accent" />
+              </div>
+              <CardTitle>Yield Tracking</CardTitle>
+              <CardDescription>Monitor your crop yields and fertilizer effectiveness</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full bg-transparent" disabled>
+                Coming Soon
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Get Started Section */}
+        <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20">
+          <CardHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <Sprout className="w-5 h-5 text-primary" />
+              <CardTitle>Get Started</CardTitle>
+            </div>
+            <CardDescription>Start your sustainable farming journey in 3 simple steps</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-4">
+              <div className="bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0">
+                1
+              </div>
+              <div>
+                <h4 className="font-semibold mb-1">Register Your Farm</h4>
+                <p className="text-sm text-muted-foreground">
+                  Add your farm details including location, crop type, and area
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0">
+                2
+              </div>
+              <div>
+                <h4 className="font-semibold mb-1">Conduct Soil Test</h4>
+                <p className="text-sm text-muted-foreground">
+                  Input your soil analysis data for accurate recommendations
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0">
+                3
+              </div>
+              <div>
+                <h4 className="font-semibold mb-1">Get Recommendations</h4>
+                <p className="text-sm text-muted-foreground">
+                  Receive personalized fertilizer suggestions for optimal yield
+                </p>
+              </div>
+            </div>
+
+            <Link href="/farms">
+              <Button className="w-full mt-4">
+                Register Your First Farm
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
