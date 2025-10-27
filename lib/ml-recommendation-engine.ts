@@ -134,7 +134,11 @@ function calculateWeatherCompatibility(fertilizerName: string, weather: WeatherD
   return Math.max(0, Math.min(100, score))
 }
 
-function calculateSoilCompatibility(soilType: string, fertilizerName: string): number {
+function calculateSoilCompatibility(soilType: string | undefined, fertilizerName: string): number {
+  if (!soilType) {
+    return 70 // Default compatibility score if soil type is not provided
+  }
+
   const soilLower = soilType.toLowerCase()
 
   if (soilLower.includes("sandy")) {
