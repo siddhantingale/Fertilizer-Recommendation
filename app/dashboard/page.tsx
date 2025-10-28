@@ -123,18 +123,23 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow">
+          <Card className="hover:shadow-lg transition-shadow border-primary/20">
             <CardHeader>
-              <div className="bg-accent/10 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-                <TrendingUp className="w-6 h-6 text-accent" />
+              <div className="bg-primary/10 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                <Sprout className="w-6 h-6 text-primary" />
               </div>
-              <CardTitle>Yield Tracking</CardTitle>
-              <CardDescription>Monitor your crop yields and fertilizer effectiveness</CardDescription>
+              <CardTitle>Disease Scanner</CardTitle>
+              <CardDescription>
+                Scan crop leaves to detect diseases and get instant treatment recommendations
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full bg-transparent" disabled>
-                Coming Soon
-              </Button>
+              <Link href="/disease-scanner">
+                <Button className="w-full bg-primary">
+                  Scan Now
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>

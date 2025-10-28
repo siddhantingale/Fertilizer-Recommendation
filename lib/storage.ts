@@ -112,3 +112,16 @@ export function getSoilTestsByUser(userId: string): SoilTest[] {
   const tests = getSoilTests()
   return tests.filter((t) => farmIds.has(t.farmId))
 }
+
+export function saveUserLanguage(userId: string, language: string) {
+  const user = getUser()
+  if (user && user.id === userId) {
+    const updatedUser = { ...user, language }
+    saveUser(updatedUser)
+  }
+}
+
+export function getUserLanguage(): string | null {
+  const user = getUser()
+  return user?.language || null
+}

@@ -9,13 +9,15 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Sprout, Phone, User } from "lucide-react"
+import { Sprout, Phone, User, ArrowLeft } from "lucide-react"
 import { saveProfile, getProfileByPhone, saveUser } from "@/lib/storage"
 import { useToast } from "@/hooks/use-toast"
+import { useLanguage } from "@/lib/language-context"
 
 export default function SignupPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const { t, language } = useLanguage()
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
   const [loading, setLoading] = useState(false)
@@ -24,50 +26,49 @@ export default function SignupPage() {
     e.preventDefault()
     if (phone.length !== 10) {
       toast({
-        title: "Invalid Phone Number",
-        description: "Please enter a valid 10-digit phone number",
+        title: t("auth.invalidPhone") || "Invalid Phone Number",
+        description: t("auth.invalidPhoneDesc") || "Please enter a valid 10-digit phone number",
         variant: "destructive",
       })
       return
     }
     if (!name.trim()) {
       toast({
-        title: "Name Required",
-        description: "Please enter your name",
+        title: t("auth.nameRequired") || "Name Required",
+        description: t("auth.nameRequiredDesc") || "Please enter your name",
         variant: "destructive",
       })
       return
     }
     setLoading(true)
 
-    // Check if the mobile number already exists
     const existing = getProfileByPhone(phone)
     if (existing) {
-      // Mobile already used -> login happens automatically
       saveUser({
         id: existing.id,
         name: existing.name,
         phone: existing.phone,
+        language: language,
       })
       toast({
-        title: "Mobile number already exists",
-        description: "You are logged in automatically.",
+        title: t("auth.mobileExists") || "Mobile number already exists",
+        description: t("auth.autoLogin") || "You are logged in automatically.",
       })
       setLoading(false)
       router.push("/dashboard")
       return
     }
 
-    // Create new profile, then redirect to Login
     const profile = {
       id: `user-${Date.now()}`,
       phone,
       name,
+      language: language,
     }
     saveProfile(profile)
     toast({
-      title: "Account Created",
-      description: "Your profile has been saved. Please login to continue.",
+      title: t("auth.accountCreated") || "Account Created",
+      description: t("auth.accountCreatedDesc") || "Your profile has been saved. Please login to continue.",
     })
     setLoading(false)
     router.push("/auth/login")
@@ -75,6 +76,11 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
+      <Button variant="ghost" size="sm" className="absolute top-4 left-4" onClick={() => router.push("/")}>
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        {t("auth.backToHome")}
+      </Button>
+
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
@@ -82,19 +88,19 @@ export default function SignupPage() {
               <Sprout className="w-8 h-8" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Create Account</CardTitle>
-          <CardDescription>Sign up with your name and mobile number</CardDescription>
+          <CardTitle className="text-2xl">{t("auth.createAccount")}</CardTitle>
+          <CardDescription>{t("auth.signupDesc")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleCreateAccount} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">{t("auth.fullName")}</Label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="name"
                   type="text"
-                  placeholder="Enter your full name"
+                  placeholder={t("auth.enterName")}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="pl-10"
@@ -104,13 +110,13 @@ export default function SignupPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Mobile Number</Label>
+              <Label htmlFor="phone">{t("auth.mobileNumber")}</Label>
               <div className="relative">
                 <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="phone"
                   type="tel"
-                  placeholder="Enter 10-digit mobile number"
+                  placeholder={t("auth.enterMobile")}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
                   className="pl-10"
@@ -120,14 +126,14 @@ export default function SignupPage() {
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating..." : "Create Account"}
+              {loading ? t("auth.creating") : t("auth.createAccount")}
             </Button>
           </form>
 
           <div className="mt-4 text-center text-sm">
-            Already have an account?{" "}
+            {t("auth.alreadyAccount")}{" "}
             <Link href="/auth/login" className="text-primary hover:underline">
-              Login
+              {t("auth.login")}
             </Link>
           </div>
         </CardContent>

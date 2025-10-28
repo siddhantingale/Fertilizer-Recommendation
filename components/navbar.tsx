@@ -52,7 +52,7 @@ export function Navbar() {
       title: "Logged Out",
       description: "You have been successfully logged out",
     })
-    router.push("/auth/login")
+    router.push("/")
   }
 
   const navItems = [

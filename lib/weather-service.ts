@@ -31,12 +31,26 @@ export async function getWeatherByCoordinates(latitude: number, longitude: numbe
 
 export async function getLocationByCoordinates(latitude: number, longitude: number): Promise<string | undefined> {
   try {
+    // Use OpenStreetMap Nominatim for reverse geocoding with more detailed address
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`,
+      {
+        headers: {
+          "User-Agent": "FertilizerPro/1.0",
+        },
+      },
     )
     if (response.ok) {
       const data = await response.json()
-      return data.address?.city || data.address?.town || data.address?.village || undefined
+      // Try to get the most specific location available
+      const location =
+        data.address?.city ||
+        data.address?.town ||
+        data.address?.village ||
+        data.address?.county ||
+        data.address?.state ||
+        data.display_name?.split(",")[0]
+      return location || undefined
     }
   } catch (error) {
     console.log("[v0] Location fetch error:", error)
