@@ -68,44 +68,83 @@ export default function DiseaseScannerPage() {
       }
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints)
-      console.log("[v0] Camera stream obtained")
+      console.log("[v0] Camera stream obtained successfully")
 
       streamRef.current = stream
       if (videoRef.current) {
         videoRef.current.srcObject = stream
-        videoRef.current.onloadedmetadata = async () => {
+        videoRef.current.muted = true
+        videoRef.current.playsInline = true
+        videoRef.current.autoplay = true
+
+        // Set a timeout to handle cases where onloadedmetadata doesn't fire
+        const timeoutId = setTimeout(async () => {
+          console.log("[v0] Timeout reached, attempting to play video")
           try {
-            console.log("[v0] Video metadata loaded, attempting to play")
-            await videoRef.current?.play()
-            console.log("[v0] Video playing successfully")
-            setIsCameraOpen(true)
+            if (videoRef.current && videoRef.current.readyState >= 2) {
+              await videoRef.current.play()
+              console.log("[v0] Video playing after timeout")
+              setIsCameraOpen(true)
+            }
+          } catch (err) {
+            console.error("[v0] Play error after timeout:", err)
+          }
+        }, 1000)
+
+        videoRef.current.onloadedmetadata = async () => {
+          clearTimeout(timeoutId)
+          console.log("[v0] Video metadata loaded")
+          try {
+            if (videoRef.current) {
+              await videoRef.current.play()
+              console.log("[v0] Video playing successfully")
+              setIsCameraOpen(true)
+            }
           } catch (playErr: any) {
             console.error("[v0] Play error:", playErr)
-            // Try playing without sound as fallback
-            if (videoRef.current) {
-              videoRef.current.muted = true
-              try {
-                await videoRef.current.play()
-                console.log("[v0] Video playing with muted audio")
-                setIsCameraOpen(true)
-              } catch (mutedErr) {
-                console.error("[v0] Muted play error:", mutedErr)
-                setError("Failed to start camera. Please check permissions and try again.")
-                closeCamera()
-              }
-            }
+            setError("Failed to start camera. Please check permissions and try again.")
+            closeCamera()
           }
+        }
+
+        videoRef.current.onerror = (err) => {
+          console.error("[v0] Video element error:", err)
+          setError("Camera error. Please try again.")
+          closeCamera()
         }
       }
     } catch (err: any) {
       console.error("[v0] Camera error:", err)
       let errorMessage = "Camera access denied"
       if (err.name === "NotAllowedError") {
-        errorMessage = "Camera permission denied. Please enable camera access in settings."
+        errorMessage = "Camera permission denied. Please enable camera access in your phone settings."
       } else if (err.name === "NotFoundError") {
         errorMessage = "No camera found on this device."
       } else if (err.name === "NotReadableError") {
-        errorMessage = "Camera is already in use by another app."
+        errorMessage = "Camera is already in use by another app. Please close other apps and try again."
+      } else if (err.name === "OverconstrainedError") {
+        errorMessage = "Camera constraints not supported. Trying with basic settings..."
+        // Fallback to basic constraints
+        try {
+          const basicStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" },
+            audio: false,
+          })
+          streamRef.current = basicStream
+          if (videoRef.current) {
+            videoRef.current.srcObject = basicStream
+            videoRef.current.muted = true
+            videoRef.current.playsInline = true
+            await videoRef.current.play()
+            setIsCameraOpen(true)
+            setError(null)
+            console.log("[v0] Camera opened with basic constraints")
+          }
+        } catch (fallbackErr) {
+          console.error("[v0] Fallback camera error:", fallbackErr)
+          setError("Unable to access camera. Please check permissions.")
+        }
+        return
       }
       setError(errorMessage)
     }
