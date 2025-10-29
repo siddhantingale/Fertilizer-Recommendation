@@ -31,9 +31,9 @@ export async function getWeatherByCoordinates(latitude: number, longitude: numbe
 
 export async function getLocationByCoordinates(latitude: number, longitude: number): Promise<string | undefined> {
   try {
-    // Use OpenStreetMap Nominatim for reverse geocoding with more detailed address
+    // Use multiple geocoding services for better accuracy
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`,
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=12&addressdetails=1`,
       {
         headers: {
           "User-Agent": "FertilizerPro/1.0",
@@ -47,9 +47,12 @@ export async function getLocationByCoordinates(latitude: number, longitude: numb
         data.address?.city ||
         data.address?.town ||
         data.address?.village ||
+        data.address?.district ||
         data.address?.county ||
         data.address?.state ||
         data.display_name?.split(",")[0]
+
+      console.log("[v0] Location detected:", location, "Lat:", latitude, "Lon:", longitude)
       return location || undefined
     }
   } catch (error) {

@@ -6,11 +6,13 @@ import Link from "next/link"
 import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calculator, Tractor, TrendingUp, Sprout, ArrowRight } from "lucide-react"
+import { Calculator, Tractor, TrendingUp, Sprout, ArrowRight, Leaf } from "lucide-react"
 import { getUser, getFarmsByUser, getSoilTestsByUser } from "@/lib/storage"
+import { useLanguage } from "@/lib/language-context"
 
 export default function DashboardPage() {
   const router = useRouter()
+  const { t } = useLanguage()
   const [user, setUser] = useState<any>(null)
   const [stats, setStats] = useState({
     totalFarms: 0,
@@ -40,17 +42,17 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6 md:py-8">
         {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Welcome back, {user.name}!</h1>
-          <p className="text-muted-foreground">
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">Welcome back, {user.name}!</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
             Manage your farms and optimize fertilizer usage for sustainable agriculture.
           </p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Total Farms</CardTitle>
@@ -86,18 +88,20 @@ export default function DashboardPage() {
         </div>
 
         {/* Feature Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="bg-primary/10 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
                 <Calculator className="w-6 h-6 text-primary" />
               </div>
-              <CardTitle>NPK Calculator</CardTitle>
-              <CardDescription>Calculate optimal fertilizer recommendations based on soil analysis</CardDescription>
+              <CardTitle className="text-lg">NPK Calculator</CardTitle>
+              <CardDescription className="text-xs md:text-sm">
+                Calculate optimal fertilizer recommendations based on soil analysis
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Link href="/calculator">
-                <Button className="w-full">
+                <Button className="w-full text-sm">
                   Start Calculation
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
@@ -110,12 +114,14 @@ export default function DashboardPage() {
               <div className="bg-secondary/10 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
                 <Tractor className="w-6 h-6 text-secondary" />
               </div>
-              <CardTitle>Manage Farms</CardTitle>
-              <CardDescription>View and manage your registered farms and their details</CardDescription>
+              <CardTitle className="text-lg">Manage Farms</CardTitle>
+              <CardDescription className="text-xs md:text-sm">
+                View and manage your registered farms and their details
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Link href="/farms">
-                <Button variant="outline" className="w-full bg-transparent">
+                <Button variant="outline" className="w-full text-sm bg-transparent">
                   View Farms
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
@@ -126,16 +132,16 @@ export default function DashboardPage() {
           <Card className="hover:shadow-lg transition-shadow border-primary/20">
             <CardHeader>
               <div className="bg-primary/10 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-                <Sprout className="w-6 h-6 text-primary" />
+                <Leaf className="w-6 h-6 text-primary" />
               </div>
-              <CardTitle>Disease Scanner</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-lg">Disease Scanner</CardTitle>
+              <CardDescription className="text-xs md:text-sm">
                 Scan crop leaves to detect diseases and get instant treatment recommendations
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Link href="/disease-scanner">
-                <Button className="w-full bg-primary">
+                <Button className="w-full text-sm bg-primary">
                   Scan Now
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
@@ -155,43 +161,43 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex gap-4">
-              <div className="bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0">
+              <div className="bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-sm">
                 1
               </div>
               <div>
-                <h4 className="font-semibold mb-1">Register Your Farm</h4>
-                <p className="text-sm text-muted-foreground">
+                <h4 className="font-semibold text-sm md:text-base mb-1">Register Your Farm</h4>
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Add your farm details including location, crop type, and area
                 </p>
               </div>
             </div>
 
             <div className="flex gap-4">
-              <div className="bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0">
+              <div className="bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-sm">
                 2
               </div>
               <div>
-                <h4 className="font-semibold mb-1">Conduct Soil Test</h4>
-                <p className="text-sm text-muted-foreground">
+                <h4 className="font-semibold text-sm md:text-base mb-1">Conduct Soil Test</h4>
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Input your soil analysis data for accurate recommendations
                 </p>
               </div>
             </div>
 
             <div className="flex gap-4">
-              <div className="bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0">
+              <div className="bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-sm">
                 3
               </div>
               <div>
-                <h4 className="font-semibold mb-1">Get Recommendations</h4>
-                <p className="text-sm text-muted-foreground">
+                <h4 className="font-semibold text-sm md:text-base mb-1">Get Recommendations</h4>
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Receive personalized fertilizer suggestions for optimal yield
                 </p>
               </div>
             </div>
 
             <Link href="/farms">
-              <Button className="w-full mt-4">
+              <Button className="w-full mt-4 text-sm">
                 Register Your First Farm
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>

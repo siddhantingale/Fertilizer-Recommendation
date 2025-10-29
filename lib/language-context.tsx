@@ -17,16 +17,17 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>("en")
 
   useEffect(() => {
-    // Load language from localStorage
     const saved = localStorage.getItem("fertilizerpro_language") as Language
     if (saved && ["en", "hi", "mr"].includes(saved)) {
       setLanguageState(saved)
+      document.documentElement.lang = saved
     }
   }, [])
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang)
     localStorage.setItem("fertilizerpro_language", lang)
+    document.documentElement.lang = lang
   }
 
   const t = (key: string): string => {

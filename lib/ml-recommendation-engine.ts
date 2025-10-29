@@ -2,7 +2,6 @@ import type { SoilTest, FertilizerRecommendation } from "./types"
 import { FERTILIZER_DATABASE } from "./fertilizer-data"
 import type { WeatherData } from "./weather-service"
 
-// Agricultural dataset for ML-based predictions
 const CROP_NUTRIENT_REQUIREMENTS: Record<string, { N: number; P: number; K: number }> = {
   sugarcane: { N: 150, P: 60, K: 120 },
   rice: { N: 120, P: 60, K: 40 },
@@ -12,6 +11,8 @@ const CROP_NUTRIENT_REQUIREMENTS: Record<string, { N: number; P: number; K: numb
   vegetables: { N: 100, P: 50, K: 100 },
   potato: { N: 120, P: 60, K: 150 },
   tomato: { N: 150, P: 80, K: 120 },
+  watermelon: { N: 100, P: 50, K: 150 },
+  maize: { N: 150, P: 60, K: 40 },
 }
 
 const SOIL_TYPE_PH_RANGE: Record<string, { min: number; max: number }> = {
@@ -21,6 +22,8 @@ const SOIL_TYPE_PH_RANGE: Record<string, { min: number; max: number }> = {
   "Sandy Soil": { min: 6.0, max: 7.0 },
   "Clay Soil": { min: 6.5, max: 7.5 },
   "Loamy Soil": { min: 6.0, max: 7.5 },
+  Black: { min: 6.5, max: 7.5 },
+  Red: { min: 5.5, max: 7.0 },
 }
 
 export function calculateMLRecommendations(
@@ -43,12 +46,12 @@ export function calculateMLRecommendations(
   const rainfallFactor = weatherData ? (weatherData.rainfall > 100 ? 0.9 : weatherData.rainfall < 20 ? 1.2 : 1.0) : 1.0
 
   // pH optimization factor
-  const phDifference = Math.abs(soilTest.ph - 6.5) // Optimal pH is 6.5
+  const phDifference = Math.abs(soilTest.ph - 6.5)
   const phFactor = 1 - phDifference * 0.1
 
   // Score each fertilizer using ML-like algorithm
   cropFertilizers.forEach((fertilizer, index) => {
-    let score = 50 // Base score
+    let score = 50
 
     // Nutrient matching (40% weight)
     const nMatch = fertilizer.nitrogen > 0 ? Math.min(100, (fertilizer.nitrogen / 50) * 100) * nDeficiency : 0
@@ -68,7 +71,7 @@ export function calculateMLRecommendations(
     }
 
     // Soil type compatibility (10% weight)
-    const soilCompatibility = calculateSoilCompatibility(soilTest.soilType, fertilizer.name)
+    const soilCompatibility = calculateSoilCompatibility(soilTest.soilType || "Loamy Soil", fertilizer.name)
     score += soilCompatibility * 0.1
 
     // Apply environmental factors
@@ -90,68 +93,59 @@ export function calculateMLRecommendations(
 
 function calculatePHCompatibility(ph: number, fertilizerName: string): number {
   if (ph < 6.0) {
-    // Acidic soil
     if (fertilizerName.includes("Calcium") || fertilizerName.includes("Lime")) return 90
     if (fertilizerName.includes("Ammonium")) return 70
     return 50
   } else if (ph > 7.5) {
-    // Alkaline soil
     if (fertilizerName.includes("Sulfate") || fertilizerName.includes("Nitrate")) return 90
     if (fertilizerName.includes("Phosphate")) return 70
     return 50
-  } else {
-    // Neutral soil - most fertilizers work well
-    return 80
   }
+  return 80
 }
 
-function calculateWeatherCompatibility(fertilizerName: string, weather: WeatherData): number {
-  let score = 50
+function calculateWeatherCompatibility(fertilizerName: string, weatherData: WeatherData): number {
+  let score = 70
 
-  // High temperature considerations
-  if (weather.temperature > 35) {
-    if (fertilizerName.includes("Urea")) score -= 20 // Urea volatilizes in heat
-    if (fertilizerName.includes("Nitrate")) score += 10
+  if (weatherData.temperature > 30) {
+    if (fertilizerName.includes("Potassium")) score += 15
+  } else if (weatherData.temperature < 15) {
+    if (fertilizerName.includes("Nitrogen")) score += 15
   }
 
-  // Low temperature considerations
-  if (weather.temperature < 10) {
-    if (fertilizerName.includes("Nitrate")) score -= 15 // Slow release in cold
-    if (fertilizerName.includes("Urea")) score += 10
+  if (weatherData.humidity > 70) {
+    if (fertilizerName.includes("Phosphate")) score += 10
   }
 
-  // High rainfall considerations
-  if (weather.rainfall > 100) {
-    if (fertilizerName.includes("Nitrate")) score -= 20 // Leaching risk
-    if (fertilizerName.includes("Potassium")) score += 15 // Helps with water retention
+  if (weatherData.rainfall > 100) {
+    if (fertilizerName.includes("Potassium")) score -= 10
   }
 
-  // High humidity considerations
-  if (weather.humidity > 80) {
-    if (fertilizerName.includes("Sulfate")) score += 10 // Better in humid conditions
-  }
-
-  return Math.max(0, Math.min(100, score))
+  return Math.min(100, score)
 }
 
-function calculateSoilCompatibility(soilType: string | undefined, fertilizerName: string): number {
-  if (!soilType) {
-    return 70 // Default compatibility score if soil type is not provided
-  }
-
-  const soilLower = soilType.toLowerCase()
+function calculateSoilCompatibility(soilType: string, fertilizerName: string): number {
+  const soilLower = (soilType || "Loamy Soil").toLowerCase()
 
   if (soilLower.includes("sandy")) {
-    if (fertilizerName.includes("Potassium")) return 90 // Sandy soils need K retention
-    if (fertilizerName.includes("Organic")) return 85
+    if (fertilizerName.includes("Organic") || fertilizerName.includes("Compost")) return 90
     return 60
-  } else if (soilLower.includes("clay")) {
-    if (fertilizerName.includes("Phosphate")) return 90 // Clay binds P
-    if (fertilizerName.includes("Sulfate")) return 80
-    return 70
-  } else if (soilLower.includes("loamy")) {
-    return 85 // Loamy soils work well with most fertilizers
   }
 
-  return 70
+  if (soilLower.includes("clay")) {
+    if (fertilizerName.includes("Sulfate")) return 85
+    return 70
+  }
+
+  if (soilLower.includes("acidic")) {
+    if (fertilizerName.includes("Lime") || fertilizerName.includes("Calcium")) return 90
+    return 60
+  }
+
+  if (soilLower.includes("alkaline")) {
+    if (fertilizerName.includes("Sulfate") || fertilizerName.includes("Nitrate")) return 90
+    return 60
+  }
+
+  return 75
 }
