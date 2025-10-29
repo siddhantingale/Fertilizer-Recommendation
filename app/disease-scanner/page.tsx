@@ -60,7 +60,7 @@ export default function DiseaseScannerPage() {
 
       const constraints = {
         video: {
-          facingMode: "environment",
+          facingMode: { ideal: "environment" },
           width: { ideal: 1280 },
           height: { ideal: 720 },
         },
@@ -68,23 +68,46 @@ export default function DiseaseScannerPage() {
       }
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints)
-      console.log("[v0] Camera stream obtained:", stream)
+      console.log("[v0] Camera stream obtained")
 
       streamRef.current = stream
       if (videoRef.current) {
         videoRef.current.srcObject = stream
-        videoRef.current.onloadedmetadata = () => {
-          console.log("[v0] Video metadata loaded")
-          videoRef.current?.play().catch((err) => {
-            console.error("[v0] Play error:", err)
-            setError("Failed to start camera playback")
-          })
+        videoRef.current.onloadedmetadata = async () => {
+          try {
+            console.log("[v0] Video metadata loaded, attempting to play")
+            await videoRef.current?.play()
+            console.log("[v0] Video playing successfully")
+            setIsCameraOpen(true)
+          } catch (playErr: any) {
+            console.error("[v0] Play error:", playErr)
+            // Try playing without sound as fallback
+            if (videoRef.current) {
+              videoRef.current.muted = true
+              try {
+                await videoRef.current.play()
+                console.log("[v0] Video playing with muted audio")
+                setIsCameraOpen(true)
+              } catch (mutedErr) {
+                console.error("[v0] Muted play error:", mutedErr)
+                setError("Failed to start camera. Please check permissions and try again.")
+                closeCamera()
+              }
+            }
+          }
         }
-        setIsCameraOpen(true)
       }
     } catch (err: any) {
       console.error("[v0] Camera error:", err)
-      setError(`Camera access denied: ${err.message || "Please check permissions"}`)
+      let errorMessage = "Camera access denied"
+      if (err.name === "NotAllowedError") {
+        errorMessage = "Camera permission denied. Please enable camera access in settings."
+      } else if (err.name === "NotFoundError") {
+        errorMessage = "No camera found on this device."
+      } else if (err.name === "NotReadableError") {
+        errorMessage = "Camera is already in use by another app."
+      }
+      setError(errorMessage)
     }
   }
 
@@ -403,7 +426,7 @@ export default function DiseaseScannerPage() {
 
                 {isCameraOpen && (
                   <div className="space-y-3">
-                    <video ref={videoRef} className="w-full rounded-lg bg-black" playsInline autoPlay />
+                    <video ref={videoRef} className="w-full rounded-lg bg-black" playsInline muted />
                     <div className="flex gap-2">
                       <Button onClick={capturePhoto} className="flex-1" size="lg">
                         <Camera className="w-4 h-4 mr-2" />
