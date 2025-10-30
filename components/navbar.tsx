@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Sprout, Home, Tractor, Calculator, User, LogOut, Menu, Globe } from "lucide-react"
+import { Sprout, Home, Tractor, Calculator, User, LogOut, Menu, Globe, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { getUser, clearUser } from "@/lib/storage"
@@ -20,6 +20,9 @@ export function Navbar() {
   const { language, setLanguage } = useLanguage()
   const [weather, setWeather] = useState<any>(null)
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
+  const [installPrompt, setInstallPrompt] = useState<any>(null)
+  const [isInstalled, setIsInstalled] = useState(false)
+  const [isIOS, setIsIOS] = useState(false)
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -42,6 +45,29 @@ export function Navbar() {
     return () => clearInterval(interval)
   }, [])
 
+  useEffect(() => {
+    // Check if app is already installed
+    if (window.matchMedia("(display-mode: standalone)").matches) {
+      setIsInstalled(true)
+      return
+    }
+
+    // Check if iOS
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    setIsIOS(isIOSDevice)
+
+    // Listen for PWA install prompt
+    const handlePWAInstallable = (e: any) => {
+      setInstallPrompt(e.detail.prompt)
+    }
+
+    window.addEventListener("pwa-installable", handlePWAInstallable)
+
+    return () => {
+      window.removeEventListener("pwa-installable", handlePWAInstallable)
+    }
+  }, [])
+
   const getWeatherIcon = (code: number) => {
     if (code === 0 || code === 1) return <Sun className="w-5 h-5 text-yellow-500" />
     if (code === 2 || code === 3) return <Cloud className="w-5 h-5 text-gray-500" />
@@ -56,6 +82,32 @@ export function Navbar() {
       description: "You have been successfully logged out",
     })
     router.push("/")
+  }
+
+  const handleInstall = async () => {
+    if (!installPrompt) return
+
+    try {
+      installPrompt.prompt()
+      const { outcome } = await installPrompt.userChoice
+      console.log(`[v0] User response to install prompt: ${outcome}`)
+      setInstallPrompt(null)
+      if (outcome === "accepted") {
+        setIsInstalled(true)
+        toast({
+          title: "App Installed",
+          description: "FertilizerPro has been installed successfully!",
+        })
+      }
+    } catch (error) {
+      console.log("[v0] Install prompt error:", error)
+    }
+  }
+
+  const handleIOSInstall = () => {
+    alert(
+      'To install FertilizerPro on iOS:\n\n1. Tap the Share button (↗️)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add"',
+    )
   }
 
   const navItems = [
@@ -101,6 +153,18 @@ export function Navbar() {
                   </Link>
                 )
               })}
+
+              {!isInstalled && (
+                <Button
+                  onClick={isIOS ? handleIOSInstall : handleInstall}
+                  disabled={!installPrompt && !isIOS}
+                  size="sm"
+                  className="hidden sm:flex gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                >
+                  <Download className="w-4 h-4" />
+                  <span className="text-xs">Install</span>
+                </Button>
+              )}
 
               {/* Language Selector - Desktop */}
               <DropdownMenu>
